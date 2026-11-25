@@ -63,9 +63,20 @@
     var s = { fiAcc: 0, fiYears: 0, eeYears: 0, units: 0, pot2: 0, pot3: 0, potInv: 0,
               paidFi: 0, paidFiOwn: 0, paidEeSocial: 0, paidEeState2: 0, paid2: 0, paid3: 0, refunds: 0 };
 
+    // Real figures from the user's own statements replace the model for past years.
+    var hasFiRec = o.fiAccNow != null, hasP2 = o.pot2Now != null, hasP3 = o.pot3Now != null;
+    var injected = false;
+    var inject = function () {
+      if (hasP2) s.pot2 = o.pot2Now;
+      if (hasP3) s.pot3 = o.pot3Now;
+      injected = true;
+    };
+
     for (var y = 0; y < years; y++) {
       var w = Math.min(1, years - y);
       var a = o.start + y;
+      var past = a < ageNow;
+      if (!injected && !past) inject();
       var country = (o.by + a) < path.move ? path.a : path.b;
       var t = Math.pow(1 + o.g, a - ageNow);
       var grow = Math.pow(1 + o.r, w), mid = w * Math.pow(1 + o.r, w / 2);
@@ -74,7 +85,7 @@
 
       if (country === "FI") {
         var salF = o.salFi * 12 * t;
-        s.fiAcc += w * FI_ACCRUAL * salF * Math.pow(1 + 0.8 * o.g, Math.max(0, fiRet - a - w));
+        if (!(past && hasFiRec)) s.fiAcc += w * FI_ACCRUAL * salF * Math.pow(1 + 0.8 * o.g, Math.max(0, fiRet - a - w));
         s.fiYears += w;
         s.potInv += FI_RATE * salF * mid;
         s.paidFi += w * FI_RATE * salF;
@@ -87,8 +98,8 @@
         var c2 = inP2 ? (o.ee2 + EE_STATE_P2) * salE : 0;
         var c3 = o.ee3 * salE;
         var refund = EE_TAX * Math.min(c3, EE_P3_SHARE * salE, EE_P3_CAP);
-        s.pot2 += c2 * mid;
-        s.pot3 += (c3 + (o.refund ? refund : 0)) * mid;
+        if (!(past && hasP2)) s.pot2 += c2 * mid;
+        if (!(past && hasP3)) s.pot3 += (c3 + (o.refund ? refund : 0)) * mid;
         s.potInv += (EE_SOCIAL_PENSION + o.ee2) * salE * mid + c3 * mid;
         s.paidEeSocial += w * EE_SOCIAL_PENSION * salE;
         s.paidEeState2 += inP2 ? w * EE_STATE_P2 * salE : 0;
@@ -97,6 +108,9 @@
         s.refunds += w * refund;
       }
     }
+
+    if (!injected) inject();
+    if (hasFiRec) s.fiAcc += o.fiAccNow * 12 * Math.pow(1 + 0.8 * o.g, Math.max(0, fiRet - ageNow));
 
     var lec = fiLec(o.by);
     var fiGross = s.fiAcc / 12;
@@ -133,6 +147,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+  var opt = function (id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : null; };
   var eur = function (v) { return Math.round(v).toLocaleString("en-GB").replace(/,/g, " ") + " €"; };
   var pct = function (v) { return (Math.round(v * 10) / 10) + " %"; };
   var NAME = { FI: "Finland", EE: "Estonia" };
@@ -143,7 +158,7 @@
   };
 
   var FIELDS = ["by", "start", "ca", "move", "cb", "salFi", "salEe", "g", "r", "endAge", "rp",
-                "fiRule", "fiCut", "ee2", "ee3", "refund", "eeAvg", "eeCut"];
+                "fiRule", "fiCut", "ee2", "ee3", "refund", "eeAvg", "eeCut", "fiAccNow", "pot2Now", "pot3Now"];
 
   function loadFromUrl() {
     var q = new URLSearchParams(root.location.search);
@@ -217,8 +232,12 @@
       g: num("g") / 100, r: num("r") / 100, rp: num("rp") / 100, endAge: num("endAge"),
       fiRule: $("fiRule").value, fiCut: num("fiCut") / 100, eeCut: num("eeCut") / 100,
       eeAvg: Math.max(1, num("eeAvg")), ee2: num("ee2") / 100, ee3: num("ee3") / 100,
-      refund: $("refund").checked
+      refund: $("refund").checked,
+      fiAccNow: opt("fiAccNow"), pot2Now: opt("pot2Now"), pot3Now: opt("pot3Now")
     };
+    var model = {};
+    Object.keys(o).forEach(function (k) { model[k] = o[k]; });
+    model.fiAccNow = model.pot2Now = model.pot3Now = null;
     var path = { a: $("ca").value, b: $("cb").value, move: Math.round(num("move")) };
     var moved = path.a !== path.b;
 
@@ -232,8 +251,8 @@
     $("fiAgeHint").textContent = "Born " + o.by + ": current law " + ageText(fiAgeLaw(o.by)) + ", proposal " + ageText(fiAgeVm(o.by)) + ".";
 
     var mine = simulate(o, path);
-    var allFi = simulate(o, { a: "FI", b: "FI", move: 0 });
-    var allEe = simulate(o, { a: "EE", b: "EE", move: 0 });
+    var allFi = simulate(model, { a: "FI", b: "FI", move: 0 });
+    var allEe = simulate(model, { a: "EE", b: "EE", move: 0 });
     var lastSalary = path.b === "FI" ? o.salFi : o.salEe;
     var label = moved ? NAME[path.a] + " until " + path.move + ", then " + NAME[path.b] : "Whole career in " + NAME[path.a];
 
@@ -265,20 +284,23 @@
     say(".");
 
     var s = mine.sums;
+    var hasFi = s.fiYears > 0 || mine.fi > 0;
+    var hasEe = s.eeYears > 0 || mine.ee2m + mine.ee3m > 0;
     fillTable("pathTable", [
-      s.fiYears > 0 && ["Finland", null, "head"],
-      s.fiYears > 0 && ["Years worked", s.fiYears.toFixed(1)],
-      s.fiYears > 0 && ["Pension starts at", ageText(mine.fiRet) + " (" + Math.round(o.by + mine.fiRet) + ")"],
-      s.fiYears > 0 && ["Accrued pension", eur(mine.fiGross)],
-      s.fiYears > 0 && ["Life expectancy coefficient", "× " + mine.lec.toFixed(3)],
-      s.fiYears > 0 && o.fiCut > 0 && ["Further cut", "− " + Math.round(o.fiCut * 100) + " %"],
-      s.fiYears > 0 && ["Earnings-related pension", eur(mine.fi)],
-      s.eeYears > 0 && ["Estonia", null, "head"],
-      s.eeYears > 0 && ["Years worked", s.eeYears.toFixed(1)],
-      s.eeYears > 0 && ["Pension starts at", ageText(mine.eeRet) + " (" + Math.round(o.by + mine.eeRet) + ")"],
-      s.eeYears > 0 && ["Pillar I" + (mine.baseShare < 1 ? ", base part " + Math.round(mine.baseShare * 100) + " %" : "") + (o.eeCut > 0 ? ", after " + Math.round(o.eeCut * 100) + " % cut" : ""), eur(mine.ee1)],
-      s.eeYears > 0 && ["Pillar II, pot " + eur(s.pot2), eur(mine.ee2m)],
-      s.eeYears > 0 && ["Pillar III, pot " + eur(s.pot3), eur(mine.ee3m)],
+      hasFi && ["Finland", null, "head"],
+      hasFi && ["Years worked", s.fiYears.toFixed(1)],
+      hasFi && ["Pension starts at", ageText(mine.fiRet) + " (" + Math.round(o.by + mine.fiRet) + ")"],
+      hasFi && o.fiAccNow != null && ["Accrued so far, from your pension record", eur(o.fiAccNow)],
+      hasFi && ["Accrued pension at retirement", eur(mine.fiGross)],
+      hasFi && ["Life expectancy coefficient", "× " + mine.lec.toFixed(3)],
+      hasFi && o.fiCut > 0 && ["Further cut", "− " + Math.round(o.fiCut * 100) + " %"],
+      hasFi && ["Earnings-related pension", eur(mine.fi)],
+      hasEe && ["Estonia", null, "head"],
+      hasEe && ["Years worked", s.eeYears.toFixed(1)],
+      hasEe && ["Pension starts at", ageText(mine.eeRet) + " (" + Math.round(o.by + mine.eeRet) + ")"],
+      hasEe && ["Pillar I" + (mine.baseShare < 1 ? ", base part " + Math.round(mine.baseShare * 100) + " %" : "") + (o.eeCut > 0 ? ", after " + Math.round(o.eeCut * 100) + " % cut" : ""), eur(mine.ee1)],
+      hasEe && ["Pillar II, pot " + eur(s.pot2) + (o.pot2Now != null ? " (from " + eur(o.pot2Now) + " today)" : ""), eur(mine.ee2m)],
+      hasEe && ["Pillar III, pot " + eur(s.pot3) + (o.pot3Now != null ? " (from " + eur(o.pot3Now) + " today)" : ""), eur(mine.ee3m)],
       ["Total per month", eur(mine.monthly), "total"],
       ["Received by age " + o.endAge, eur(mine.lifetime)]
     ]);

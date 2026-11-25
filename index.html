@@ -49,6 +49,7 @@
           </select>
           <span class="hint" id="fiAgeHint"></span>
         </div>
+        <div class="field"><label for="fiAccNow">Pension accrued so far, € per month (optional)</label><input type="number" id="fiAccNow" min="0" max="20000" step="1" placeholder="from your pension record"><span class="hint">The figure on your record at tyoelake.fi. Replaces the model for the years already worked.</span></div>
         <div class="field"><label for="fiCut">Further cut to the statutory pension: <span id="fiCutOut">0</span> %</label><input type="range" id="fiCut" min="0" max="40" step="1" value="0"><span class="hint">Your guess at the index brake and future reforms. The life expectancy coefficient is already applied.</span></div>
       </div>
 
@@ -64,6 +65,8 @@
           <span class="hint">The state's 4 % is carved out of the 33 % social tax your employer pays.</span>
         </div>
         <div class="field"><label for="ee3">Pillar III, % of gross salary</label><input type="number" id="ee3" min="0" max="30" step="0.5" value="0"><span class="hint" id="ee3Hint"></span></div>
+        <div class="field"><label for="pot2Now">Pillar II balance today, € (optional)</label><input type="number" id="pot2Now" min="0" step="100" placeholder="from pensionikeskus.ee"></div>
+        <div class="field"><label for="pot3Now">Pillar III balance today, € (optional)</label><input type="number" id="pot3Now" min="0" step="100" placeholder="from pensionikeskus.ee"><span class="hint">Real balances replace the model for the years already worked. Future contributions are added on top.</span></div>
         <div class="check"><input type="checkbox" id="refund" checked><label for="refund">Reinvest the 22 % income tax refund into pillar III</label></div>
         <button type="button" id="maxBtn">Set maximum benefit</button>
         <div class="field"><label for="eeAvg">Estonian average gross wage, € per month</label><input type="number" id="eeAvg" min="800" max="6000" step="50" value="2200"><span class="hint">Your salary relative to this sets your pillar I insurance share.</span></div>
@@ -97,6 +100,7 @@
     <summary>What this model assumes</summary>
     <ul>
       <li><strong>Today's rules for the whole career.</strong> Each working year uses the current contribution and accrual rates of the country you were in. Past rates were different, and Estonia's pillar II only started in 2002.</li>
+      <li><strong>Your own figures.</strong> If you enter your accrued Finnish pension or your pillar II and III balances, they replace the modelled past and only the future is projected. The invested row and the whole-career comparison rows always use the model. Entered figures are kept in the page address so the link reproduces the scenario; nothing is sent to a server.</li>
       <li><strong>After a move.</strong> Each country pays its own share from its own retirement age, as EU rules require. The Finnish part keeps being revalued until it starts. Estonia's pillar I base amount is paid in proportion to the years worked in Estonia, <span class="flag">a simplification</span> of the EU pro-rata rule.</li>
       <li><strong>Finland.</strong> TyEL contribution 24.4 % of gross (you 7.30 %, the employer the rest). Accrual 1.5 % of each year's earnings, revalued 80 % by wages. The life expectancy coefficient and the retirement ages for people born after 1967 are <span class="flag">approximations</span> of ETK forecasts, not official values. The national pension top-up for low earners is left out.</li>
       <li><strong>Ministry of Finance proposal.</strong> Published in October 2026: the lowest retirement age rises half a year per birth cohort until 70, reached by those born in 1976. It is a civil-service proposal, not law. Ages for later cohorts are an extrapolation.</li>
