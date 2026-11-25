@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pension Calculator: Finland and Estonia</title>
-<meta name="description" content="Estimate your pension after a career in Finland, Estonia or both, and compare it with investing the same contributions.">
+<title>Pension Calculator: Finland, Estonia, Belgium</title>
+<meta name="description" content="Estimate your pension after a career in Finland, Estonia, Belgium or a mix of them, and compare it with investing the same contributions.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Pension Calculator: Finland and Estonia</h1>
-    <p class="lede">What a career in Finland, Estonia or both pays out at retirement, next to what the same contributions would pay if they had simply been invested. All amounts are gross, per month, in today's euros.</p>
+    <h1>Pension Calculator: Finland, Estonia, Belgium</h1>
+    <p class="lede">What a career in one of these countries, or a move between them, pays out at retirement, next to what the same contributions would pay if they had simply been invested. All amounts are gross, per month, in today's euros.</p>
   </header>
 
   <section class="panel">
@@ -20,7 +20,7 @@
         <h2>You</h2>
         <div class="field"><label for="by">Birth year</label><input type="number" id="by" min="1950" max="2008" step="1" value="1976"></div>
         <div class="field"><label for="start">Age when career started</label><input type="number" id="start" min="16" max="50" step="1" value="25"></div>
-        <div class="field"><label for="g">Real wage growth, % per year</label><input type="number" id="g" min="0" max="4" step="0.1" value="1"><span class="hint">Above inflation. Also drives pension indexation.</span></div>
+        <div class="field"><label for="g">Real wage growth, % per year</label><input type="number" id="g" min="0" max="4" step="0.1" value="1"><span class="hint" id="gHint">Above inflation, so 1 is typical. Also drives pension indexation.</span></div>
         <div class="field"><label for="r">Real investment return, % per year</label><input type="number" id="r" min="0" max="10" step="0.1" value="4"><span class="hint">After fees and inflation. Used for pillars II, III and the invested row.</span></div>
         <div class="field"><label for="endAge">Payout lasts until age</label><input type="number" id="endAge" min="75" max="105" step="1" value="90"><span class="hint">Invested pots are spread evenly from retirement to this age.</span></div>
         <div class="field"><label for="rp">Real return during payout, % per year</label><input type="number" id="rp" min="0" max="6" step="0.1" value="1"></div>
@@ -29,15 +29,21 @@
       <div class="group">
         <h2>Career</h2>
         <div class="field"><label for="ca">Worked first in</label>
-          <select id="ca"><option value="FI" selected>Finland</option><option value="EE">Estonia</option></select>
+          <select id="ca"><option value="FI" selected>Finland</option><option value="EE">Estonia</option><option value="BE">Belgium</option></select>
         </div>
-        <div class="field"><label for="move">Year of the move</label><input type="number" id="move" min="1970" max="2080" step="1" value="2023"><span class="hint" id="moveHint"></span></div>
+        <div class="field"><label for="move">Year of the move</label><input type="number" id="move" min="1970" max="2080" step="1" value="2023"></div>
         <div class="field"><label for="cb">Then worked in</label>
-          <select id="cb"><option value="FI">Finland</option><option value="EE" selected>Estonia</option></select>
-          <span class="hint">Pick the same country twice for a career with no move.</span>
+          <select id="cb"><option value="FI">Finland</option><option value="EE" selected>Estonia</option><option value="BE">Belgium</option></select>
+          <span class="hint">Pick the same country as before for a career with no move.</span>
+        </div>
+        <div class="field"><label for="move2">Year of a second move</label><input type="number" id="move2" min="1970" max="2080" step="1" value="2030"></div>
+        <div class="field"><label for="cc">Then worked in</label>
+          <select id="cc"><option value="none" selected>No second move</option><option value="FI">Finland</option><option value="EE">Estonia</option><option value="BE">Belgium</option></select>
+          <span class="hint" id="moveHint"></span>
         </div>
         <div class="field"><label for="salFi">Gross salary in Finland, € per month</label><input type="number" id="salFi" min="0" max="30000" step="100" value="4000"></div>
-        <div class="field"><label for="salEe">Gross salary in Estonia, € per month</label><input type="number" id="salEe" min="0" max="30000" step="100" value="4000"><span class="hint">Both in today's euros.</span></div>
+        <div class="field"><label for="salEe">Gross salary in Estonia, € per month</label><input type="number" id="salEe" min="0" max="30000" step="100" value="4000"></div>
+        <div class="field"><label for="salBe">Gross salary in Belgium, € per month</label><input type="number" id="salBe" min="0" max="30000" step="100" value="4000"><span class="hint">All in today's euros. Only the countries on your path are used.</span></div>
       </div>
 
       <div class="group">
@@ -55,7 +61,7 @@
             <option value="accrued" selected>Pension accrued so far</option>
             <option value="estimate">Estimated pension at retirement age</option>
           </select>
-          <span class="hint">Accrued: replaces the model for the years already worked; later Finnish years are still modelled from the salary. Estimate: taken as your whole Finnish pension, with no salary calculation for Finland at all, only wage indexation until it starts.</span>
+          <span class="hint">Accrued: replaces the model for the years already worked; later Finnish years are still modelled from the salary. Estimate: used exactly as entered as your whole Finnish pension, with no salary calculation and no indexation.</span>
         </div>
         <div class="field"><label for="fiCut">Further cut to the statutory pension: <span id="fiCutOut">0</span> %</label><input type="range" id="fiCut" min="0" max="40" step="1" value="0"><span class="hint">Your guess at the index brake and future reforms. The life expectancy coefficient is already applied.</span></div>
       </div>
@@ -72,12 +78,23 @@
           <span class="hint">The state's 4 % is carved out of the 33 % social tax your employer pays.</span>
         </div>
         <div class="field"><label for="ee3">Pillar III, % of gross salary</label><input type="number" id="ee3" min="0" max="30" step="0.5" value="0"><span class="hint" id="ee3Hint"></span></div>
-        <div class="field"><label for="pot2Now">Pillar II balance today, € (optional)</label><input type="number" id="pot2Now" min="0" step="100" placeholder="from pensionikeskus.ee"></div>
-        <div class="field"><label for="pot3Now">Pillar III balance today, € (optional)</label><input type="number" id="pot3Now" min="0" step="100" placeholder="from pensionikeskus.ee"><span class="hint">Real balances replace the model for the years already worked. Future contributions are added on top.</span></div>
         <div class="check"><input type="checkbox" id="refund" checked><label for="refund">Reinvest the 22 % income tax refund into pillar III</label></div>
         <button type="button" id="maxBtn">Set maximum benefit</button>
+        <div class="field"><label for="pot2Now">Pillar II balance today, € (optional)</label><input type="number" id="pot2Now" min="0" step="100" placeholder="from pensionikeskus.ee"></div>
+        <div class="field"><label for="pot3Now">Pillar III balance today, € (optional)</label><input type="number" id="pot3Now" min="0" step="100" placeholder="from pensionikeskus.ee"><span class="hint">Real balances replace the model for the years already worked. Future contributions are added on top.</span></div>
         <div class="field"><label for="eeAvg">Estonian average gross wage, € per month</label><input type="number" id="eeAvg" min="800" max="6000" step="50" value="2200"><span class="hint">Your salary relative to this sets your pillar I insurance share.</span></div>
         <div class="field"><label for="eeCut">Further cut to pillar I: <span id="eeCutOut">0</span> %</label><input type="range" id="eeCut" min="0" max="40" step="1" value="0"></div>
+      </div>
+
+      <div class="group">
+        <h2>Belgium</h2>
+        <div class="field"><label for="be2">Pillar II, employer plan, % of gross salary</label><input type="number" id="be2" min="0" max="20" step="0.5" value="3"><span class="hint">Group insurance or pension fund paid by your employer. Set 0 if you have none.</span></div>
+        <div class="field"><label for="be3">Pillar III, pension savings, € per year</label><input type="number" id="be3" min="0" max="5000" step="50" value="0"><span class="hint" id="be3Hint"></span></div>
+        <div class="check"><input type="checkbox" id="beRefund" checked><label for="beRefund">Reinvest the tax reduction into pillar III</label></div>
+        <button type="button" id="beMaxBtn">Set maximum benefit</button>
+        <div class="field"><label for="bePot2Now">Pillar II reserve today, € (optional)</label><input type="number" id="bePot2Now" min="0" step="100" placeholder="from mypension.be"></div>
+        <div class="field"><label for="bePot3Now">Pillar III balance today, € (optional)</label><input type="number" id="bePot3Now" min="0" step="100" placeholder="from your provider"></div>
+        <div class="field"><label for="beCut">Further cut to the statutory pension: <span id="beCutOut">0</span> %</label><input type="range" id="beCut" min="0" max="40" step="1" value="0"></div>
       </div>
     </div>
   </section>
@@ -90,10 +107,11 @@
     <p class="verdict" id="verdict"></p>
     <div class="rows" id="rows"></div>
     <div class="legend">
-      <span><i class="key fi"></i>Finland earnings-related (pay-as-you-go)</span>
-      <span><i class="key ee1"></i>Estonia pillar I (pay-as-you-go)</span>
-      <span><i class="key p2"></i>Estonia pillar II</span>
-      <span><i class="key p3"></i>Estonia pillar III</span>
+      <span><i class="key fi"></i>Finland earnings-related</span>
+      <span><i class="key ee1"></i>Estonia pillar I</span>
+      <span><i class="key be1"></i>Belgium statutory</span>
+      <span><i class="key p2"></i>Pillar II (Estonia, Belgium)</span>
+      <span><i class="key p3"></i>Pillar III (Estonia, Belgium)</span>
       <span><i class="key inv"></i>Same contributions, invested</span>
     </div>
   </section>
@@ -107,18 +125,20 @@
     <summary>What this model assumes</summary>
     <ul>
       <li><strong>Today's rules for the whole career.</strong> Each working year uses the current contribution and accrual rates of the country you were in. Past rates were different, and Estonia's pillar II only started in 2002.</li>
-      <li><strong>Your own figures.</strong> If you enter your accrued Finnish pension or your pillar II and III balances, they replace the modelled past and only the future is projected. The invested row and the whole-career comparison rows always use the model. Entered figures are kept in the page address so the link reproduces the scenario; nothing is sent to a server.</li>
-      <li><strong>After a move.</strong> Each country pays its own share from its own retirement age, as EU rules require. The Finnish part keeps being revalued until it starts. Estonia's pillar I base amount is paid in proportion to the years worked in Estonia, <span class="flag">a simplification</span> of the EU pro-rata rule.</li>
+      <li><strong>Your own figures.</strong> If you enter your Finnish pension record figure or your pillar II and III balances, they replace the modelled past and only the future is projected. The invested row and the whole-career comparison rows always use the model. Entered figures are kept in the page address so the link reproduces the scenario; nothing is sent to a server.</li>
+      <li><strong>After a move.</strong> Each country pays its own share from its own retirement age, as EU rules require, and you work until the retirement age of the last country. The Finnish part keeps being revalued until it starts. Estonia's pillar I base amount is paid in proportion to the years worked in Estonia, <span class="flag">a simplification</span> of the EU pro-rata rule.</li>
       <li><strong>Finland.</strong> TyEL contribution 24.4 % of gross (you 7.30 %, the employer the rest). Accrual 1.5 % of each year's earnings, revalued 80 % by wages. The life expectancy coefficient and the retirement ages for people born after 1967 are <span class="flag">approximations</span> of ETK forecasts, not official values. The national pension top-up for low earners is left out.</li>
       <li><strong>Ministry of Finance proposal.</strong> Published in October 2026: the lowest retirement age rises half a year per birth cohort until 70, reached by those born in 1976. It is a civil-service proposal, not law. Ages for later cohorts are an extrapolation.</li>
       <li><strong>Estonia pillar I.</strong> Base 399.24 € plus 10.477 € per year of service (values from April 2026). Each year counts half as service and half by your wage relative to the average; in pillar II the wage half is reduced by a fifth. Both values are indexed here at 80 % of real wage growth. Retirement age after 65 rises about one month per birth year, <span class="flag">an estimate</span>.</li>
       <li><strong>Estonia pillars II and III.</strong> Pillar II gets your 2, 4 or 6 % plus 4 % from social tax. Pillar III contributions earn a 22 % income tax refund on up to 15 % of gross income, at most 6 000 € a year.</li>
-      <li><strong>The invested row.</strong> Finland: the full 24.4 %. Estonia: the 20 % pension part of social tax, plus your pillar II and III contributions, without the tax refund. This is a thought experiment. Pay-as-you-go contributions fund today's pensioners and cannot be redirected.</li>
+      <li><strong>Belgium, statutory pension.</strong> Employee scheme at the single rate: each year adds 60 % of that year's salary divided by 45, with salary counted up to a ceiling of 82 609 € a year and at most 45 years. Past salaries are revalued by prices only, so there is no real growth on them. Retirement age 66, and 67 for those born from 1964. The household rate (75 %), the minimum pension, the planned bonus and malus and the solidarity deductions are left out. The 16.36 % contribution (7.5 % yours, 8.86 % employer) is <span class="flag">the nominal pension share</span> of Belgian social security, which is in practice pooled.</li>
+      <li><strong>Belgium pillars II and III.</strong> Pillar II is whatever your employer pays into a group plan, entered as a share of salary. Pillar III is pension savings with a 30 % tax reduction on up to 1 050 € a year, or 25 % on the whole amount up to 1 350 €. The final tax on these pots at payout is not deducted.</li>
+      <li><strong>The invested row.</strong> Finland: the full 24.4 %. Estonia: the 20 % pension part of social tax plus your pillar II and III contributions. Belgium: the 16.36 % plus pillar II and III contributions. Tax refunds are not included. This is a thought experiment. Pay-as-you-go contributions fund today's pensioners and cannot be redirected.</li>
       <li><strong>Not included.</strong> Income tax on pensions, market crashes near retirement, living past the payout age (state pensions keep paying, a spent pot does not), and the disability and survivor cover the statutory systems include.</li>
     </ul>
   </details>
 
-  <footer>An estimate for comparison, not financial advice and not an official pension forecast. For your real accrual, check your pension record at tyoelake.fi and your account at pensionikeskus.ee.</footer>
+  <footer>An estimate for comparison, not financial advice and not an official pension forecast. For your real figures, check tyoelake.fi (Finland), pensionikeskus.ee (Estonia) and mypension.be (Belgium).</footer>
 </div>
 <script src="app.js"></script>
 </body>
