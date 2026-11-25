@@ -55,7 +55,7 @@
             <option value="accrued" selected>Pension accrued so far</option>
             <option value="estimate">Estimated pension at retirement age</option>
           </select>
-          <span class="hint">Accrued: replaces the model for years already worked; use this if you have left Finland. Estimate: used as your Finnish pension as it stands, since it assumes you keep working in Finland at your current pay.</span>
+          <span class="hint">Accrued: replaces the model for the years already worked; later Finnish years are still modelled from the salary. Estimate: taken as your whole Finnish pension, with no salary calculation for Finland at all, only wage indexation until it starts.</span>
         </div>
         <div class="field"><label for="fiCut">Further cut to the statutory pension: <span id="fiCutOut">0</span> %</label><input type="range" id="fiCut" min="0" max="40" step="1" value="0"><span class="hint">Your guess at the index brake and future reforms. The life expectancy coefficient is already applied.</span></div>
       </div>

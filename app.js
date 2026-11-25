@@ -115,7 +115,8 @@
 
     var lec = fiLec(o.by);
     // An official estimate already includes future work in Finland and the coefficient.
-    var fiGross = isEst ? o.fiAccNow / lec : s.fiAcc / 12;
+    // It is quoted at today's level, so it still gets wage indexation until it starts.
+    var fiGross = isEst ? o.fiAccNow / lec * Math.pow(1 + 0.8 * o.g, Math.max(0, fiRet - ageNow)) : s.fiAcc / 12;
     var fi = fiGross * lec * (1 - o.fiCut);
 
     var total = s.fiYears + s.eeYears;
