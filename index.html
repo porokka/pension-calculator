@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pension Calculator: Finland, Estonia, Belgium</title>
-<meta name="description" content="Estimate your pension after a career in Finland, Estonia, Belgium or a mix of them, and compare it with investing the same contributions.">
+<title>Cross-Border Pension Calculator</title>
+<meta name="description" content="Estimate your pension after tax for a career in Finland, Estonia, Belgium, Switzerland or a mix of them, and compare it with investing the same contributions.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Pension Calculator: Finland, Estonia, Belgium</h1>
-    <p class="lede">What a career in one of these countries, or any chain of moves between them, pays out at retirement, next to what the same contributions would pay if they had simply been invested. All amounts are gross, per month, in today's euros.</p>
+    <h1>Cross-Border Pension Calculator</h1>
+    <p class="lede">What a career in Finland, Estonia, Belgium or Switzerland, or any chain of moves between them, pays out at retirement, next to what the same contributions would pay if they had simply been invested. Amounts are per month in today's euros, after tax unless you switch to before tax.</p>
   </header>
 
   <section class="panel">
@@ -36,6 +36,7 @@
         <div class="field" id="wrapFI"><label for="salFi">Gross salary in Finland, € per month</label><input type="number" id="salFi" min="0" max="30000" step="100" value="4000"></div>
         <div class="field" id="wrapEE"><label for="salEe">Gross salary in Estonia, € per month</label><input type="number" id="salEe" min="0" max="30000" step="100" value="4000"></div>
         <div class="field" id="wrapBE"><label for="salBe">Gross salary in Belgium, € per month</label><input type="number" id="salBe" min="0" max="30000" step="100" value="4000"></div>
+        <div class="field" id="wrapCH"><label for="salCh">Gross salary in Switzerland, € per month</label><input type="number" id="salCh" min="0" max="40000" step="100" value="7000"><span class="hint">In euros, like everything else here.</span></div>
       </div>
 
       <div class="group" id="grpFI">
@@ -88,13 +89,30 @@
         <div class="field"><label for="bePot3Now">Pillar III balance today, € (optional)</label><input type="number" id="bePot3Now" min="0" step="100" placeholder="from your provider"></div>
         <div class="field"><label for="beCut">Further cut to the statutory pension: <span id="beCutOut">0</span> %</label><input type="range" id="beCut" min="0" max="40" step="1" value="0"></div>
       </div>
+
+      <div class="group" id="grpCH">
+        <h2>Switzerland</h2>
+        <div class="field"><label for="chf">One franc in euros</label><input type="number" id="chf" min="0.5" max="2" step="0.01" value="1.07"><span class="hint">Swiss thresholds are set in francs and converted at this rate.</span></div>
+        <div class="field"><label for="chInt">Pillar 2, real interest, % per year</label><input type="number" id="chInt" min="0" max="5" step="0.1" value="1"><span class="hint">What the pension fund credits above inflation. The legal minimum is 1.25 % before inflation.</span></div>
+        <div class="field"><label for="chConv">Pillar 2, conversion rate, %</label><input type="number" id="chConv" min="3" max="8" step="0.1" value="6"><span class="hint">Yearly pension as a share of the capital. 6.8 % is the legal rate on the mandatory part; many funds pay 5 to 6 % overall.</span></div>
+        <div class="field"><label for="ch3">Pillar 3a, € per year</label><input type="number" id="ch3" min="0" max="10000" step="100" value="0"><span class="hint" id="ch3Hint"></span></div>
+        <div class="check"><input type="checkbox" id="chRefund" checked><label for="chRefund">Reinvest the tax saved into pillar 3a</label></div>
+        <button type="button" id="chMaxBtn">Set maximum benefit</button>
+        <div class="field"><label for="chPot2Now">Pillar 2 capital today, € (optional)</label><input type="number" id="chPot2Now" min="0" step="1000" placeholder="from your fund certificate"></div>
+        <div class="field"><label for="chPot3Now">Pillar 3a balance today, € (optional)</label><input type="number" id="chPot3Now" min="0" step="1000" placeholder="from your provider"></div>
+        <div class="field"><label for="chCut">Further cut to pillar 1: <span id="chCutOut">0</span> %</label><input type="range" id="chCut" min="0" max="40" step="1" value="0"></div>
+      </div>
     </div>
   </section>
 
   <section class="panel">
     <div class="chart-head">
-      <h2>Monthly pension at retirement</h2>
-      <button type="button" class="quiet" id="copyBtn">Copy link to this scenario</button>
+      <h2 id="chartTitle">Monthly pension at retirement, after tax</h2>
+      <div class="tools">
+        <label for="view" class="inline">Show</label>
+        <select id="view"><option value="net" selected>After tax</option><option value="gross">Before tax</option></select>
+        <button type="button" class="quiet" id="copyBtn">Copy link to this scenario</button>
+      </div>
     </div>
     <p class="verdict" id="verdict"></p>
     <div class="rows" id="rows"></div>
@@ -102,8 +120,9 @@
       <span><i class="key fi"></i>Finland earnings-related</span>
       <span><i class="key ee1"></i>Estonia pillar I</span>
       <span><i class="key be1"></i>Belgium statutory</span>
-      <span><i class="key p2"></i>Pillar II (Estonia, Belgium)</span>
-      <span><i class="key p3"></i>Pillar III (Estonia, Belgium)</span>
+      <span><i class="key ch1"></i>Switzerland pillar 1</span>
+      <span><i class="key p2"></i>Pillar II</span>
+      <span><i class="key p3"></i>Pillar III</span>
       <span><i class="key own"></i>Your own investments</span>
       <span><i class="key inv"></i>Same contributions, invested</span>
     </div>
@@ -127,12 +146,15 @@
       <li><strong>Estonia pillars II and III.</strong> Pillar II gets your 2, 4 or 6 % plus 4 % from social tax. Pillar III contributions earn a 22 % income tax refund on up to 15 % of gross income, at most 6 000 € a year.</li>
       <li><strong>Belgium, statutory pension.</strong> Employee scheme at the single rate: each year adds 60 % of that year's salary divided by 45, with salary counted up to a ceiling of 82 609 € a year and at most 45 years. Past salaries are revalued by prices only, so there is no real growth on them. Retirement age 66, and 67 for those born from 1964. The household rate (75 %), the minimum pension, the planned bonus and malus and the solidarity deductions are left out. The 16.36 % contribution (7.5 % yours, 8.86 % employer) is <span class="flag">the nominal pension share</span> of Belgian social security, which is in practice pooled.</li>
       <li><strong>Belgium pillars II and III.</strong> Pillar II is whatever your employer pays into a group plan, entered as a share of salary. Pillar III is pension savings with a 30 % tax reduction on up to 1 050 € a year, or 25 % on the whole amount up to 1 350 €. The final tax on these pots at payout is not deducted.</li>
-      <li><strong>The invested row.</strong> Finland: the full 24.4 %. Estonia: the 20 % pension part of social tax plus your pillar II and III contributions. Belgium: the 16.36 % plus pillar II and III contributions. Tax refunds are not included. This is a thought experiment. Pay-as-you-go contributions fund today's pensioners and cannot be redirected.</li>
-      <li><strong>Not included.</strong> Income tax on pensions, market crashes near retirement, living past the payout age (state pensions keep paying, a spent pot does not), and the disability and survivor cover the statutory systems include.</li>
+      <li><strong>Switzerland.</strong> Pillar 1 (AHV) follows the 2026 scale: 1 260 to 2 520 francs a month depending on average income, reached in full at 90 720 francs a year and 44 contribution years, reduced pro rata for missing years, with the 13th monthly payment included. Pillar 2 (BVG) is the legal minimum only: age credits of 7, 10, 15 and 18 % on salary between 26 460 and 90 720 francs, growing at the interest you set and converted to a pension at the rate you set. Many employers insure more than the minimum, so <span class="flag">real pillar 2 pensions are often higher</span>. Pillar 3a is deductible up to 7 258 francs a year; the tax saved is assumed to be 25 % of the payment. Retirement age 65.</li>
+      <li><strong>Tax.</strong> <span class="flag">Approximate.</span> Each country's pension is taxed under that country's own rules for a single pensioner with no other income, as if that pension were the only one. Finland: 2026 effective rates at average municipal and church tax (about 10 % at 1 500 € a month, 24 % at 3 000 €, 31 % at 4 000 €). Estonia: 22 % above the pensioner's exemption of 776 € a month on pillar I; pillar II and III paid as a long-term pension are tax free. Belgium: 2026 withholding with the health and solidarity contributions (about 7 % at 1 900 €, 24 % at 3 000 €); pillar II capital 16.5 %, pension savings 8 %. Switzerland: income tax of a mid-tax canton on pillars 1 and 2, 6 % on pillar 3a capital. Which country may actually tax a pension paid across a border depends on the tax treaty and where you live, so treat the split as a guide.</li>
+      <li><strong>Tax on investments.</strong> Your own investments and the invested row are taxed on their gains only, by the country you end your career in: Finland 30 % (34 % above 30 000 € of gains a year), Estonia 22 %, Belgium 10 % above 10 000 € of gains a year, Switzerland none. What you hold today is treated as already taxed.</li>
+      <li><strong>The invested row.</strong> Finland: the full 24.4 %. Estonia: the 20 % pension part of social tax plus your pillar II and III contributions. Belgium: the 16.36 % plus pillar II and III contributions. Switzerland: the 8.7 % pillar 1 contribution, the pillar 2 credits and pillar 3a. Tax refunds are not included. This is a thought experiment. Pay-as-you-go contributions fund today's pensioners and cannot be redirected.</li>
+      <li><strong>Not included.</strong> Health insurance premiums, wealth tax, market crashes near retirement, living past the payout age (state pensions keep paying, a spent pot does not), and the disability and survivor cover the statutory systems include.</li>
     </ul>
   </details>
 
-  <footer>An estimate for comparison, not financial advice and not an official pension forecast. For your real figures, check tyoelake.fi (Finland), pensionikeskus.ee (Estonia) and mypension.be (Belgium).</footer>
+  <footer>An estimate for comparison, not financial advice and not an official pension forecast. For your real figures, check tyoelake.fi (Finland), pensionikeskus.ee (Estonia), mypension.be (Belgium) and your AHV account statement and pension fund certificate (Switzerland).</footer>
 </div>
 <script src="app.js"></script>
 </body>

@@ -1,6 +1,6 @@
 # pension-calculator
 
-Static calculator comparing Finnish, Estonian and Belgian pensions, with up to two moves between them, against investing the same contributions.
+Static calculator comparing Finnish, Estonian, Belgian and Swiss pensions after tax, with a chain of moves between them, against investing the same contributions.
 
 Live: https://pension-calculator-pied.vercel.app
 
