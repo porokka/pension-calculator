@@ -2,7 +2,7 @@
 :root {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #15202d; --muted: #586677; --line: #d8dee7;
   --accent: #1d4f91; --track: #e8ecf2;
-  --fi: #2f6db5; --ee1: #c44d74; --be1: #6f8f2a; --p2: #1f9488; --p3: #c98a1b; --inv: #7556c2;
+  --fi: #2f6db5; --ee1: #c44d74; --be1: #6f8f2a; --p2: #1f9488; --p3: #c98a1b; --inv: #7556c2; --own: #5f6f85;
   --warn: #a4551a;
   --display: "Segoe UI Semibold", "Segoe UI", system-ui, -apple-system, sans-serif;
   --body: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
@@ -11,7 +11,7 @@
   :root {
     --bg: #0f141b; --surface: #18202a; --ink: #e6ebf2; --muted: #9ba8b7; --line: #2b3542;
     --accent: #86b4f0; --track: #222c38;
-    --fi: #5b96dc; --ee1: #e07a9c; --be1: #a6c95a; --p2: #3fbfb1; --p3: #e2ab45; --inv: #a48cea;
+    --fi: #5b96dc; --ee1: #e07a9c; --be1: #a6c95a; --p2: #3fbfb1; --p3: #e2ab45; --inv: #a48cea; --own: #a9b6c7;
     --warn: #e6a36b;
     color-scheme: dark;
   }
@@ -60,6 +60,7 @@ button.quiet { background: transparent; color: var(--accent); border: 1px solid 
 .seg.p2, .key.p2 { background: var(--p2); }
 .seg.p3, .key.p3 { background: var(--p3); }
 .seg.inv, .key.inv { background: var(--inv); }
+.seg.own, .key.own { background: var(--own); }
 .row .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .row .val small { display: block; font-weight: 400; color: var(--muted); font-size: 0.78rem; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 16px; font-size: 0.8rem; color: var(--muted); }

@@ -83,7 +83,7 @@
 
     var s = {
       years: { FI: 0, EE: 0, BE: 0 }, fiAcc: 0, units: 0, beAcc: 0,
-      pot: { ee2: 0, ee3: 0, be2: 0, be3: 0 }, potInv: 0,
+      pot: { ee2: 0, ee3: 0, be2: 0, be3: 0 }, potInv: 0, own: 0,
       paid: { fi: 0, fiOwn: 0, eeSocial: 0, eeState2: 0, ee2: 0, ee3: 0, eeRefund: 0,
               be: 0, beOwn: 0, be2: 0, be3: 0, beRefund: 0 }
     };
@@ -95,6 +95,7 @@
     var injected = false;
     var inject = function () {
       Object.keys(real).forEach(function (k) { if (real[k] != null) s.pot[k] = real[k]; });
+      s.own = o.ownNow || 0;
       injected = true;
     };
 
@@ -110,6 +111,9 @@
 
       Object.keys(s.pot).forEach(function (k) { s.pot[k] *= grow; });
       s.potInv *= grow;
+      // The user's own investments: today's value plus what they keep adding.
+      s.own *= grow;
+      if (!past) s.own += (o.ownMonthly || 0) * 12 * mid;
 
       if (country === "FI") {
         var salF = o.salFi * 12 * t;
@@ -172,13 +176,14 @@
     var n = Math.max(0, o.endAge - workEnd);
     var ee2m = annuity(s.pot.ee2, n, o.rp), ee3m = annuity(s.pot.ee3, n, o.rp);
     var be2m = annuity(s.pot.be2, n, o.rp), be3m = annuity(s.pot.be3, n, o.rp);
-    var inv = annuity(s.potInv, n, o.rp);
-    var funded = ee2m + ee3m + be2m + be3m;
+    var ownM = annuity(s.own, n, o.rp);
+    var inv = annuity(s.potInv + s.own, n, o.rp);
+    var funded = ee2m + ee3m + be2m + be3m + ownM;
 
     return {
       ret: ret, workEnd: workEnd, lec: lec, baseShare: baseShare,
       fiGross: fiGross, fi: fi, ee1: ee1, be1: be1,
-      ee2m: ee2m, ee3m: ee3m, be2m: be2m, be3m: be3m,
+      ee2m: ee2m, ee3m: ee3m, be2m: be2m, be3m: be3m, ownM: ownM,
       monthly: fi + ee1 + be1 + funded,
       lifetime: fi * 12 * Math.max(0, o.endAge - ret.FI) + ee1 * 12 * Math.max(0, o.endAge - ret.EE) +
                 be1 * 12 * Math.max(0, o.endAge - ret.BE) + funded * 12 * n,
@@ -206,7 +211,7 @@
   };
 
   var FIELDS = ["by", "start", "salFi", "salEe", "salBe",
-                "g", "r", "endAge", "rp",
+                "g", "r", "endAge", "rp", "ownNow", "ownMonthly",
                 "fiRule", "fiAccNow", "fiKind", "fiCut",
                 "ee2", "ee3", "refund", "pot2Now", "pot3Now", "eeAvg", "eeCut",
                 "be2", "be3", "beRefund", "bePot2Now", "bePot3Now", "beCut"];
@@ -374,6 +379,7 @@
       fiRule: $("fiRule").value, fiCut: num("fiCut") / 100, eeCut: num("eeCut") / 100, beCut: num("beCut") / 100,
       eeAvg: Math.max(1, num("eeAvg")), ee2: num("ee2") / 100, ee3: num("ee3") / 100, refund: $("refund").checked,
       be2: num("be2") / 100, be3: Math.max(0, num("be3")), beRefund: $("beRefund").checked,
+      ownNow: opt("ownNow"), ownMonthly: Math.max(0, num("ownMonthly")),
       fiAccNow: opt("fiAccNow"), fiKind: $("fiKind").value,
       pot2Now: opt("pot2Now"), pot3Now: opt("pot3Now"), bePot2Now: opt("bePot2Now"), bePot3Now: opt("bePot3Now")
     };
@@ -408,15 +414,15 @@
     var mine = simulate(o, legs);
     var segsOf = function (x) {
       return [["fi", x.fi, "Finland earnings-related"], ["ee1", x.ee1, "Estonia pillar I"], ["be1", x.be1, "Belgium statutory"],
-              ["p2", x.ee2m + x.be2m, "Pillar II"], ["p3", x.ee3m + x.be3m, "Pillar III"]];
+              ["p2", x.ee2m + x.be2m, "Pillar II"], ["p3", x.ee3m + x.be3m, "Pillar III"], ["own", x.ownM, "Own investments"]];
     };
     // Without a salary for a country on the path, its contributions are unknown.
     var noSalary = CODES.filter(function (c) { return mine.sums.years[c] > 0 && !(SAL[c] > 0); });
     var gap = noSalary.length ? "without " + noSalary.map(function (c) { return NAME[c]; }).join(" and ") + ": enter a salary there to include it" : "";
     var rows = [
       { name: "Your path", sub: label, segs: segsOf(mine), total: mine.monthly },
-      { name: "Same contributions, invested", sub: gap || "pot " + eur(mine.sums.potInv) + " at " + ageText(mine.workEnd),
-        segs: [["inv", mine.inv, "Invested"]], total: mine.inv }
+      { name: "Same contributions, invested", sub: gap || "pot " + eur(mine.sums.potInv + mine.sums.own) + " at " + ageText(mine.workEnd),
+        segs: [["inv", mine.inv - mine.ownM, "Invested"], ["own", mine.ownM, "Own investments"]], total: mine.inv }
     ];
     CODES.forEach(function (c) {
       if (legs.length === 1 || !on[c]) return;
@@ -434,9 +440,9 @@
     say("Born " + o.by + ", " + label.replace(/^Whole/, "whole") + ": ");
     say(eur(mine.monthly), true);
     say(" a month once every pension is paying");
-    if (paying.length > 1) {
-      say(" (" + paying.map(function (c) { return NAME[c] + " " + eur(part[c]) + " from age " + ageText(mine.ret[c]); }).join(", ") + ")");
-    }
+    var bits = paying.map(function (c) { return NAME[c] + " " + eur(part[c]) + " from age " + ageText(mine.ret[c]); });
+    if (mine.ownM > 0) bits.push("your own investments " + eur(mine.ownM));
+    if (bits.length > 1) say(" (" + bits.join(", ") + ")");
     if (noSalary.length) {
       say(". The invested comparison leaves out " + noSalary.map(function (c) { return NAME[c]; }).join(" and ") + " because no salary is entered there.");
     } else {
@@ -471,6 +477,11 @@
       hasBe && ["Statutory pension" + (o.beCut > 0 ? ", after " + Math.round(o.beCut * 100) + " % cut" : ""), eur(mine.be1)],
       hasBe && ["Pillar II, pot " + eur(s.pot.be2) + from(o.bePot2Now), eur(mine.be2m)],
       hasBe && ["Pillar III, pot " + eur(s.pot.be3) + from(o.bePot3Now), eur(mine.be3m)],
+      s.own > 0 && ["Your own investments", null, "head"],
+      s.own > 0 && o.ownNow != null && ["Value today", eur(o.ownNow)],
+      s.own > 0 && o.ownMonthly > 0 && ["Added from now on", eur(o.ownMonthly) + " a month"],
+      s.own > 0 && ["Pot at " + ageText(mine.workEnd), eur(s.own)],
+      s.own > 0 && ["Per month until age " + o.endAge, eur(mine.ownM)],
       ["Total per month", eur(mine.monthly), "total"],
       ["Received by age " + o.endAge, eur(mine.lifetime)]
     ]);
@@ -491,7 +502,7 @@
       s.years.BE > 0 && ["Belgium, tax reduction on pension savings", eur(p.beRefund)],
       ["Total paid in", eur(p.fi + p.eeSocial + p.ee2 + p.ee3 + p.be + p.be2 + p.be3), "total"],
       ["If all of it had been invested", null, "head"],
-      ["Pot at " + ageText(mine.workEnd), eur(s.potInv)],
+      ["Pot at " + ageText(mine.workEnd) + (s.own > 0 ? ", with your own investments" : ""), eur(s.potInv + s.own)],
       ["Per month until age " + o.endAge, eur(mine.inv), "total"],
       ["Received by age " + o.endAge, eur(mine.invLifetime)]
     ]);

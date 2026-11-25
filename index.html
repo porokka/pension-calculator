@@ -24,6 +24,8 @@
         <div class="field"><label for="r">Real investment return, % per year</label><input type="number" id="r" min="0" max="10" step="0.1" value="4"><span class="hint">After fees and inflation. Used for pillars II, III and the invested row.</span></div>
         <div class="field"><label for="endAge">Payout lasts until age</label><input type="number" id="endAge" min="75" max="105" step="1" value="90"><span class="hint">Invested pots are spread evenly from retirement to this age.</span></div>
         <div class="field"><label for="rp">Real return during payout, % per year</label><input type="number" id="rp" min="0" max="6" step="0.1" value="1"></div>
+        <div class="field"><label for="ownNow">Your own investments today, € (optional)</label><input type="number" id="ownNow" min="0" step="1000" placeholder="funds, shares, savings"></div>
+        <div class="field"><label for="ownMonthly">Added to them from now on, € per month</label><input type="number" id="ownMonthly" min="0" step="50" value="0"><span class="hint">Grows at the investment return and is paid out like the pension pots. Counted in every row, since it is yours either way.</span></div>
       </div>
 
       <div class="group">
@@ -102,6 +104,7 @@
       <span><i class="key be1"></i>Belgium statutory</span>
       <span><i class="key p2"></i>Pillar II (Estonia, Belgium)</span>
       <span><i class="key p3"></i>Pillar III (Estonia, Belgium)</span>
+      <span><i class="key own"></i>Your own investments</span>
       <span><i class="key inv"></i>Same contributions, invested</span>
     </div>
   </section>
@@ -116,6 +119,7 @@
     <ul>
       <li><strong>Today's rules for the whole career.</strong> Each working year uses the current contribution and accrual rates of the country you were in. Past rates were different, and Estonia's pillar II only started in 2002.</li>
       <li><strong>Your own figures.</strong> If you enter your Finnish pension record figure or your pillar II and III balances, they replace the modelled past and only the future is projected. The invested row and the whole-career comparison rows always use the model. Entered figures are kept in the page address so the link reproduces the scenario; nothing is sent to a server.</li>
+      <li><strong>Your own investments.</strong> Today's value, plus anything you keep adding each month, grows at the investment return until you stop working and is then spread to the payout age like the other pots. It is added to your path, to the invested row and to the comparison rows alike. Tax on the gains is not deducted.</li>
       <li><strong>After a move.</strong> Each country pays its own share from its own retirement age, as EU rules require, and you work until the retirement age of the last country. The Finnish part keeps being revalued until it starts. Estonia's pillar I base amount is paid in proportion to the years worked in Estonia, <span class="flag">a simplification</span> of the EU pro-rata rule.</li>
       <li><strong>Finland.</strong> TyEL contribution 24.4 % of gross (you 7.30 %, the employer the rest). Accrual 1.5 % of each year's earnings, revalued 80 % by wages. The life expectancy coefficient and the retirement ages for people born after 1967 are <span class="flag">approximations</span> of ETK forecasts, not official values. The national pension top-up for low earners is left out.</li>
       <li><strong>Ministry of Finance proposal.</strong> Published in October 2026: the lowest retirement age rises half a year per birth cohort until 70, reached by those born in 1976. It is a civil-service proposal, not law. Ages for later cohorts are an extrapolation.</li>
