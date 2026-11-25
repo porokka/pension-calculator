@@ -82,3 +82,8 @@ footer { color: var(--muted); font-size: 0.8rem; }
   .row { grid-template-columns: 1fr auto; }
   .row .bar { grid-column: 1 / -1; order: 3; }
 }
+[hidden] { display: none !important; }
+.chain { display: flex; flex-direction: column; gap: 10px; }
+.leg { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 8px; align-items: end; }
+.leg .field { min-width: 0; }
+button.remove { padding: 7px 9px; font-weight: 500; font-size: 0.82rem; align-self: end; }

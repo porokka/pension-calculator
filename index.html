@@ -11,7 +11,7 @@
 <div class="wrap">
   <header>
     <h1>Pension Calculator: Finland, Estonia, Belgium</h1>
-    <p class="lede">What a career in one of these countries, or a move between them, pays out at retirement, next to what the same contributions would pay if they had simply been invested. All amounts are gross, per month, in today's euros.</p>
+    <p class="lede">What a career in one of these countries, or any chain of moves between them, pays out at retirement, next to what the same contributions would pay if they had simply been invested. All amounts are gross, per month, in today's euros.</p>
   </header>
 
   <section class="panel">
@@ -28,25 +28,15 @@
 
       <div class="group">
         <h2>Career</h2>
-        <div class="field"><label for="ca">Worked first in</label>
-          <select id="ca"><option value="FI" selected>Finland</option><option value="EE">Estonia</option><option value="BE">Belgium</option></select>
-        </div>
-        <div class="field"><label for="move">Year of the move</label><input type="number" id="move" min="1970" max="2080" step="1" value="2023"></div>
-        <div class="field"><label for="cb">Then worked in</label>
-          <select id="cb"><option value="FI">Finland</option><option value="EE" selected>Estonia</option><option value="BE">Belgium</option></select>
-          <span class="hint">Pick the same country as before for a career with no move.</span>
-        </div>
-        <div class="field"><label for="move2">Year of a second move</label><input type="number" id="move2" min="1970" max="2080" step="1" value="2030"></div>
-        <div class="field"><label for="cc">Then worked in</label>
-          <select id="cc"><option value="none" selected>No second move</option><option value="FI">Finland</option><option value="EE">Estonia</option><option value="BE">Belgium</option></select>
-          <span class="hint" id="moveHint"></span>
-        </div>
-        <div class="field"><label for="salFi">Gross salary in Finland, € per month</label><input type="number" id="salFi" min="0" max="30000" step="100" value="4000"></div>
-        <div class="field"><label for="salEe">Gross salary in Estonia, € per month</label><input type="number" id="salEe" min="0" max="30000" step="100" value="4000"></div>
-        <div class="field"><label for="salBe">Gross salary in Belgium, € per month</label><input type="number" id="salBe" min="0" max="30000" step="100" value="4000"><span class="hint">All in today's euros. Only the countries on your path are used.</span></div>
+        <div id="chain" class="chain"></div>
+        <button type="button" class="quiet" id="addMove">Add a move</button>
+        <span class="hint" id="moveHint"></span>
+        <div class="field" id="wrapFI"><label for="salFi">Gross salary in Finland, € per month</label><input type="number" id="salFi" min="0" max="30000" step="100" value="4000"></div>
+        <div class="field" id="wrapEE"><label for="salEe">Gross salary in Estonia, € per month</label><input type="number" id="salEe" min="0" max="30000" step="100" value="4000"></div>
+        <div class="field" id="wrapBE"><label for="salBe">Gross salary in Belgium, € per month</label><input type="number" id="salBe" min="0" max="30000" step="100" value="4000"></div>
       </div>
 
-      <div class="group">
+      <div class="group" id="grpFI">
         <h2>Finland</h2>
         <div class="field"><label for="fiRule">Retirement age rule</label>
           <select id="fiRule">
@@ -66,7 +56,7 @@
         <div class="field"><label for="fiCut">Further cut to the statutory pension: <span id="fiCutOut">0</span> %</label><input type="range" id="fiCut" min="0" max="40" step="1" value="0"><span class="hint">Your guess at the index brake and future reforms. The life expectancy coefficient is already applied.</span></div>
       </div>
 
-      <div class="group">
+      <div class="group" id="grpEE">
         <h2>Estonia</h2>
         <div class="field"><label for="ee2">Pillar II, your contribution</label>
           <select id="ee2">
@@ -86,7 +76,7 @@
         <div class="field"><label for="eeCut">Further cut to pillar I: <span id="eeCutOut">0</span> %</label><input type="range" id="eeCut" min="0" max="40" step="1" value="0"></div>
       </div>
 
-      <div class="group">
+      <div class="group" id="grpBE">
         <h2>Belgium</h2>
         <div class="field"><label for="be2">Pillar II, employer plan, % of gross salary</label><input type="number" id="be2" min="0" max="20" step="0.5" value="3"><span class="hint">Group insurance or pension fund paid by your employer. Set 0 if you have none.</span></div>
         <div class="field"><label for="be3">Pillar III, pension savings, € per year</label><input type="number" id="be3" min="0" max="5000" step="50" value="0"><span class="hint" id="be3Hint"></span></div>

@@ -205,14 +205,39 @@
     return y + " y" + (m ? " " + m + " m" : "");
   };
 
-  var FIELDS = ["by", "start", "ca", "move", "cb", "move2", "cc", "salFi", "salEe", "salBe",
+  var FIELDS = ["by", "start", "salFi", "salEe", "salBe",
                 "g", "r", "endAge", "rp",
                 "fiRule", "fiAccNow", "fiKind", "fiCut",
                 "ee2", "ee3", "refund", "pot2Now", "pot3Now", "eeAvg", "eeCut",
                 "be2", "be3", "beRefund", "bePot2Now", "bePot3Now", "beCut"];
 
+  // The career is a chain: a first country, then any number of moves.
+  var MAX_LEGS = 6;
+  var chain = [{ c: "FI", from: 0 }, { c: "EE", from: 2023 }];
+
+  function parsePath(text) {
+    var out = [];
+    text.split(":").forEach(function (part) {
+      var bits = part.split(","), year = parseInt(bits[1], 10);
+      if (CODES.indexOf(bits[0]) < 0) return;
+      out.push({ c: bits[0], from: out.length === 0 ? 0 : (isFinite(year) ? year : NOW) });
+    });
+    return out.length ? out.slice(0, MAX_LEGS) : null;
+  }
+
+  function pathText() {
+    return chain.map(function (l, i) { return i === 0 ? l.c : l.c + "," + l.from; }).join(":");
+  }
+
   function loadFromUrl() {
     var q = new URLSearchParams(root.location.search);
+    var parsed = q.has("path") ? parsePath(q.get("path")) : null;
+    if (!parsed && q.has("ca")) {
+      // Links made before the chain existed.
+      parsed = parsePath(q.get("ca") + ":" + q.get("cb") + "," + q.get("move") +
+                         (q.get("cc") && q.get("cc") !== "none" ? ":" + q.get("cc") + "," + q.get("move2") : ""));
+    }
+    if (parsed) chain = parsed;
     FIELDS.forEach(function (id) {
       if (!q.has(id)) return;
       var el = $(id), v = q.get(id);
@@ -227,6 +252,7 @@
 
   function saveToUrl() {
     var q = new URLSearchParams();
+    q.set("path", pathText());
     FIELDS.forEach(function (id) {
       var el = $(id);
       q.set(id, el.type === "checkbox" ? (el.checked ? "1" : "0") : el.value);
@@ -276,16 +302,58 @@
     });
   }
 
-  // Collapse the three selects into the legs that actually differ.
+  // Collapse the chain into the legs that actually differ.
   function readLegs() {
-    var legs = [{ c: $("ca").value, from: 0 }];
-    var add = function (c, from) {
-      if (c === "none" || c === legs[legs.length - 1].c) return;
-      legs.push({ c: c, from: from });
-    };
-    add($("cb").value, Math.round(num("move")));
-    add($("cc").value, Math.round(num("move2")));
+    var legs = [{ c: chain[0].c, from: 0 }];
+    for (var i = 1; i < chain.length; i++) {
+      if (chain[i].c !== legs[legs.length - 1].c) legs.push({ c: chain[i].c, from: Math.round(chain[i].from) });
+    }
     return legs;
+  }
+
+  function countrySelect(id, value) {
+    var sel = document.createElement("select");
+    sel.id = id;
+    CODES.forEach(function (c) { var op = el("option", null, NAME[c]); op.value = c; sel.appendChild(op); });
+    sel.value = value;
+    return sel;
+  }
+
+  function buildChain() {
+    var box = $("chain");
+    box.textContent = "";
+    chain.forEach(function (leg, i) {
+      var sel = countrySelect("leg" + i + "C", leg.c);
+      sel.addEventListener("change", function () { leg.c = sel.value; render(); });
+      if (i === 0) {
+        var first = el("div", "field");
+        var lab = el("label", null, "Worked first in");
+        lab.htmlFor = sel.id;
+        first.appendChild(lab); first.appendChild(sel);
+        box.appendChild(first);
+        return;
+      }
+      var row = el("div", "leg");
+      var yearField = el("div", "field"), yearLabel = el("label", null, "Moved in");
+      var year = document.createElement("input");
+      year.type = "number"; year.id = "leg" + i + "Y"; year.min = 1960; year.max = 2090; year.step = 1; year.value = leg.from;
+      yearLabel.htmlFor = year.id;
+      year.addEventListener("input", function () {
+        var v = parseInt(year.value, 10);
+        if (isFinite(v)) { leg.from = v; render(); }
+      });
+      yearField.appendChild(yearLabel); yearField.appendChild(year);
+      var toField = el("div", "field"), toLabel = el("label", null, "to");
+      toLabel.htmlFor = sel.id;
+      toField.appendChild(toLabel); toField.appendChild(sel);
+      var remove = el("button", "quiet remove", "Remove");
+      remove.type = "button";
+      remove.setAttribute("aria-label", "Remove move " + i);
+      remove.addEventListener("click", function () { chain.splice(i, 1); buildChain(); render(); });
+      row.appendChild(yearField); row.appendChild(toField); row.appendChild(remove);
+      box.appendChild(row);
+    });
+    $("addMove").hidden = chain.length >= MAX_LEGS;
   }
 
   function describe(legs) {
@@ -321,7 +389,16 @@
     $("fiCutOut").textContent = Math.round(o.fiCut * 100);
     $("eeCutOut").textContent = Math.round(o.eeCut * 100);
     $("beCutOut").textContent = Math.round(o.beCut * 100);
-    $("moveHint").textContent = label + ".";
+    var unordered = chain.some(function (l, i) { return i > 1 && l.from <= chain[i - 1].from; });
+    $("moveHint").textContent = label + "." + (unordered ? " Move years should increase down the list." : "");
+
+    // Only the countries on the path are shown, and only their figures count.
+    var on = {};
+    legs.forEach(function (l) { on[l.c] = true; });
+    CODES.forEach(function (c) { $("grp" + c).hidden = !on[c]; $("wrap" + c).hidden = !on[c]; });
+    if (!on.FI) o.fiAccNow = null;
+    if (!on.EE) o.pot2Now = o.pot3Now = null;
+    if (!on.BE) o.bePot2Now = o.bePot3Now = null;
     $("gHint").textContent = "Above inflation, so 1 is typical. Also drives pension indexation." + (num("g") > 4 ? " Capped at 4; " + num("g") + " looks like a figure that includes inflation." : "");
     var cap = o.salEe > 0 ? Math.min(15, EE_P3_CAP / (o.salEe * 12) * 100) : 0;
     $("ee3Hint").textContent = "Tax refund applies up to " + pct(cap) + " at this salary (" + eur(cap / 100 * o.salEe) + " a month).";
@@ -342,7 +419,7 @@
         segs: [["inv", mine.inv, "Invested"]], total: mine.inv }
     ];
     CODES.forEach(function (c) {
-      if (legs.length === 1 && legs[0].c === c) return;
+      if (legs.length === 1 || !on[c]) return;
       if (!(SAL[c] > 0)) return;
       var x = simulate(model, [{ c: c, from: 0 }]);
       rows.push({ name: "Whole career in " + NAME[c], sub: "for comparison, retire at " + ageText(x.ret[c]), segs: segsOf(x), total: x.monthly });
@@ -438,10 +515,20 @@
     var done = function () { $("copyBtn").textContent = "Link copied"; setTimeout(function () { $("copyBtn").textContent = "Copy link to this scenario"; }, 1800); };
     if (navigator.clipboard) navigator.clipboard.writeText(root.location.href).then(done, function () {});
   });
+  $("addMove").addEventListener("click", function () {
+    var last = chain[chain.length - 1];
+    var used = chain.map(function (l) { return l.c; });
+    var fresh = CODES.filter(function (c) { return used.indexOf(c) < 0; });
+    var next = fresh.length ? fresh[0] : CODES.filter(function (c) { return c !== last.c; })[0];
+    chain.push({ c: next, from: Math.max((last.from || 0) + 1, NOW + 1) });
+    buildChain();
+    render();
+  });
   loadFromUrl();
   Array.prototype.forEach.call(document.querySelectorAll("input, select"), function (n) {
     n.addEventListener("input", render);
     n.addEventListener("change", render);
   });
+  buildChain();
   render();
 })(typeof window !== "undefined" ? window : this);
