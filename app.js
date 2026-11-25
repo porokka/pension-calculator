@@ -64,7 +64,8 @@
               paidFi: 0, paidFiOwn: 0, paidEeSocial: 0, paidEeState2: 0, paid2: 0, paid3: 0, refunds: 0 };
 
     // Real figures from the user's own statements replace the model for past years.
-    var hasFiRec = o.fiAccNow != null, hasP2 = o.pot2Now != null, hasP3 = o.pot3Now != null;
+    var isEst = o.fiAccNow != null && o.fiKind === "estimate";
+    var hasFiRec = o.fiAccNow != null && !isEst, hasP2 = o.pot2Now != null, hasP3 = o.pot3Now != null;
     var injected = false;
     var inject = function () {
       if (hasP2) s.pot2 = o.pot2Now;
@@ -113,7 +114,8 @@
     if (hasFiRec) s.fiAcc += o.fiAccNow * 12 * Math.pow(1 + 0.8 * o.g, Math.max(0, fiRet - ageNow));
 
     var lec = fiLec(o.by);
-    var fiGross = s.fiAcc / 12;
+    // An official estimate already includes future work in Finland and the coefficient.
+    var fiGross = isEst ? o.fiAccNow / lec : s.fiAcc / 12;
     var fi = fiGross * lec * (1 - o.fiCut);
 
     var total = s.fiYears + s.eeYears;
@@ -158,7 +160,7 @@
   };
 
   var FIELDS = ["by", "start", "ca", "move", "cb", "salFi", "salEe", "g", "r", "endAge", "rp",
-                "fiRule", "fiCut", "ee2", "ee3", "refund", "eeAvg", "eeCut", "fiAccNow", "pot2Now", "pot3Now"];
+                "fiRule", "fiCut", "ee2", "ee3", "refund", "eeAvg", "eeCut", "fiAccNow", "fiKind", "pot2Now", "pot3Now"];
 
   function loadFromUrl() {
     var q = new URLSearchParams(root.location.search);
@@ -233,7 +235,7 @@
       fiRule: $("fiRule").value, fiCut: num("fiCut") / 100, eeCut: num("eeCut") / 100,
       eeAvg: Math.max(1, num("eeAvg")), ee2: num("ee2") / 100, ee3: num("ee3") / 100,
       refund: $("refund").checked,
-      fiAccNow: opt("fiAccNow"), pot2Now: opt("pot2Now"), pot3Now: opt("pot3Now")
+      fiAccNow: opt("fiAccNow"), fiKind: $("fiKind").value, pot2Now: opt("pot2Now"), pot3Now: opt("pot3Now")
     };
     var model = {};
     Object.keys(o).forEach(function (k) { model[k] = o[k]; });
@@ -290,7 +292,7 @@
       hasFi && ["Finland", null, "head"],
       hasFi && ["Years worked", s.fiYears.toFixed(1)],
       hasFi && ["Pension starts at", ageText(mine.fiRet) + " (" + Math.round(o.by + mine.fiRet) + ")"],
-      hasFi && o.fiAccNow != null && ["Accrued so far, from your pension record", eur(o.fiAccNow)],
+      hasFi && o.fiAccNow != null && [o.fiKind === "estimate" ? "Official estimate, from your pension record" : "Accrued so far, from your pension record", eur(o.fiAccNow)],
       hasFi && ["Accrued pension at retirement", eur(mine.fiGross)],
       hasFi && ["Life expectancy coefficient", "× " + mine.lec.toFixed(3)],
       hasFi && o.fiCut > 0 && ["Further cut", "− " + Math.round(o.fiCut * 100) + " %"],

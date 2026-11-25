@@ -49,7 +49,14 @@
           </select>
           <span class="hint" id="fiAgeHint"></span>
         </div>
-        <div class="field"><label for="fiAccNow">Pension accrued so far, € per month (optional)</label><input type="number" id="fiAccNow" min="0" max="20000" step="1" placeholder="from your pension record"><span class="hint">The figure on your record at tyoelake.fi. Replaces the model for the years already worked.</span></div>
+        <div class="field"><label for="fiAccNow">Figure from your pension record, € per month (optional)</label><input type="number" id="fiAccNow" min="0" max="20000" step="1" placeholder="from tyoelake.fi"></div>
+        <div class="field"><label for="fiKind">That figure is</label>
+          <select id="fiKind">
+            <option value="accrued" selected>Pension accrued so far</option>
+            <option value="estimate">Estimated pension at retirement age</option>
+          </select>
+          <span class="hint">Accrued: replaces the model for years already worked; use this if you have left Finland. Estimate: used as your Finnish pension as it stands, since it assumes you keep working in Finland at your current pay.</span>
+        </div>
         <div class="field"><label for="fiCut">Further cut to the statutory pension: <span id="fiCutOut">0</span> %</label><input type="range" id="fiCut" min="0" max="40" step="1" value="0"><span class="hint">Your guess at the index brake and future reforms. The life expectancy coefficient is already applied.</span></div>
       </div>
 
